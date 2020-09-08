@@ -57,6 +57,7 @@ final class SqlFormatter
         $indentLevel           = 0;
         $newline               = false;
         $inlineParentheses     = false;
+        $compactSelect         = false;
         $increaseSpecialIndent = false;
         $increaseBlockIndent   = false;
         $indentTypes           = [];
@@ -265,12 +266,50 @@ final class SqlFormatter
                 if ($token->value() === 'LIMIT' && ! $inlineParentheses) {
                     $clauseLimit = true;
                 }
+
+                $compactSelect = false;
+                if ($token->value() === 'SELECT') {
+                    $length = 0;
+                    $subCursor = $cursor->subCursor();
+                    for ($j=1; $j<=10; $j++) {
+                        // Reached end of string
+                        $next = $subCursor->next(Token::TOKEN_TYPE_WHITESPACE);
+                        if (! $next) {
+                            break;
+                        }
+
+                        if ($next->value() === 'FROM') {
+                            $compactSelect = true;
+                            break;
+                        }
+
+                        // Reached an invalid token for compact SELECT
+                        if ($next->value()===';' || $next->value()==='(') {
+                            break;
+                        }
+
+                        // Reached an invalid token type for compact SELECT
+                        if ($next->isOfType(
+                            Token::TOKEN_TYPE_RESERVED_TOPLEVEL,
+                            Token::TOKEN_TYPE_RESERVED_NEWLINE,
+                            Token::TOKEN_TYPE_COMMENT,
+                            Token::TOKEN_TYPE_BLOCK_COMMENT
+                        )) {
+                            break;
+                        }
+
+                        $length += strlen($next->value());
+                        if ($length > 100) {
+                            break;
+                        }
+                    }
+                }
             } elseif ($clauseLimit &&
                 $token->value() !== ',' &&
                 ! $token->isOfType(Token::TOKEN_TYPE_NUMBER, Token::TOKEN_TYPE_WHITESPACE)) {
                 // Checks if we are out of the limit clause
                 $clauseLimit = false;
-            } elseif ($token->value() === ',' && ! $inlineParentheses) {
+            } elseif ($token->value() === ',' && ! $inlineParentheses && !$compactSelect) {
                 // Commas start a new line (unless within inline parentheses or SQL 'LIMIT' clause)
                 //If the previous TOKEN_VALUE is 'LIMIT', resets new line
                 if ($clauseLimit === true) {
