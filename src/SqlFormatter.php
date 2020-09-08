@@ -101,11 +101,20 @@ final class SqlFormatter
 
             // Display comments directly where they appear in the source
             if ($token->isOfType(Token::TOKEN_TYPE_COMMENT, Token::TOKEN_TYPE_BLOCK_COMMENT)) {
+                $indent = str_repeat($tab, $indentLevel);
                 if ($token->isOfType(Token::TOKEN_TYPE_BLOCK_COMMENT)) {
-                    $indent      = str_repeat($tab, $indentLevel);
                     $return      = rtrim($return, " \t");
                     $return     .= "\n" . $indent;
                     $highlighted = str_replace("\n", "\n" . $indent, $highlighted);
+                } else {
+                    $prevToken = $cursor->subCursor()->previous();
+                    if ($prevToken && $prevToken->isOfType(Token::TOKEN_TYPE_WHITESPACE) && substr_count($prevToken->value(), "\n") > 0) {
+                        $prevToken2 = $cursor->subCursor()->previous(Token::TOKEN_TYPE_WHITESPACE);
+                        if (!$prevToken2->isOfType(Token::TOKEN_TYPE_COMMENT)) {
+                            $return = rtrim($return, " \t");
+                            $return .= "\n" . $indent;
+                        }
+                    }
                 }
 
                 $return .= $highlighted;
