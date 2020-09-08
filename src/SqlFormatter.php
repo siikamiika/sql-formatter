@@ -65,6 +65,7 @@ final class SqlFormatter
         $inlineCount           = 0;
         $inlineIndented        = false;
         $clauseLimit           = false;
+        $clauseBetween         = false;
 
         // Tokenize String
         $cursor = $this->tokenizer->tokenize($string);
@@ -321,8 +322,11 @@ final class SqlFormatter
                 }
             } elseif ($token->isOfType(Token::TOKEN_TYPE_RESERVED_NEWLINE)) {
             // Newline reserved words start a new line
+                // BETWEEN syntax uses AND as a separator so don't add a newline before it
+                if ($token->value() === 'AND' && $clauseBetween) {
+                    $clauseBetween = false;
                 // Add a newline before the reserved word (if not already added)
-                if (! $addedNewline) {
+                } elseif (! $addedNewline) {
                     $return  = rtrim($return, ' ');
                     $return .= "\n" . str_repeat($tab, $indentLevel);
                 }
@@ -339,6 +343,8 @@ final class SqlFormatter
                         $return = rtrim($return, ' ');
                     }
                 }
+            } elseif ($token->value() === 'BETWEEN') {
+                $clauseBetween = true;
             }
 
             // If the token shouldn't have a space before it
