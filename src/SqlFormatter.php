@@ -246,8 +246,8 @@ final class SqlFormatter
                     array_shift($indentTypes);
                 }
 
-                // Add a newline after the top level reserved word
-                $newline = true;
+                // Don't add a newline after the top level reserved word
+                $newline = false;
                 // Add a newline before the top level reserved word (if not already added)
                 if (! $addedNewline) {
                     $return  = rtrim($return, ' ');

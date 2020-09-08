@@ -327,10 +327,6 @@ final class Tokenizer
         'UNION',
         'EXCEPT',
         'INTERSECT',
-    ];
-
-    /** @var string[] */
-    private $reservedNewline = [
         'LEFT OUTER JOIN',
         'RIGHT OUTER JOIN',
         'LEFT JOIN',
@@ -338,6 +334,10 @@ final class Tokenizer
         'OUTER JOIN',
         'INNER JOIN',
         'JOIN',
+    ];
+
+    /** @var string[] */
+    private $reservedNewline = [
         'XOR',
         'OR',
         'AND',
